@@ -101,10 +101,10 @@
         lightBtn.addEventListener('click', (e) => {
             e.preventDefault();
             document.documentElement.style.transition = 'all 0.5s';
-            document.documentElement.style.setProperty('--bg-deep', '#fff');
+            document.documentElement.style.setProperty('--bg-deep', '#fff000');
             document.documentElement.style.setProperty('--bg-card', '#f0f0f0');
-            document.documentElement.style.setProperty('--text', '#000');
-            document.documentElement.style.setProperty('--text-light', '#333');
+            document.documentElement.style.setProperty('--text', '#000000');
+            document.documentElement.style.setProperty('--text-light', '#333333');
             setTimeout(() => {
                 alert("What have you done?! It's an eyesore! Reverting to darkness for your own safety.");
                 document.documentElement.removeAttribute('style');
