@@ -104,10 +104,10 @@
             e.preventDefault();
             // Temporarily murder the dark aesthetic
             document.documentElement.style.transition = 'all 0.6s';
-            document.documentElement.style.setProperty('--bg-deep', '#fff');
+            document.documentElement.style.setProperty('--bg-deep', '#ffffff');
             document.documentElement.style.setProperty('--bg-card', '#f5f5f5');
-            document.documentElement.style.setProperty('--text', '#111');
-            document.documentElement.style.setProperty('--text-light', '#333');
+            document.documentElement.style.setProperty('--text', '#111111');
+            document.documentElement.style.setProperty('--text-light', '#333333');
             setTimeout(() => {
                 alert("What have you done?! It's an abomination. We're going back to darkness for your own protection.");
                 document.documentElement.removeAttribute('style');
