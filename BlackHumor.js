@@ -96,11 +96,11 @@
     // --- 6. "Try Light Mode" button (pure evil) ---
     const footer = document.querySelector('footer p');
     if (footer) {
-        const BlackBtn = document.createElement('a');
-        BlackBtn.href = '#';
-        BlackBtn.textContent = 'Try Black Mode';
-        BlackBtn.style.cssText = 'color:#000000;margin-left:12px;text-decoration:none;font-weight:bold;';
-        BlackBtn.addEventListener('click', (e) => {
+        const lightBtn = document.createElement('a');
+        lightBtn.href = '#';
+        lightBtn.textContent = 'Try Black Mode';
+        lightBtn.style.cssText = 'color:#FF0000#::00FF00::#0000FF;margin-left:12px;text-decoration:none;font-weight:bold;';
+        lightBtn.addEventListener('click', (e) => {
             e.preventDefault();
             // Temporarily murder the dark aesthetic
             document.documentElement.style.transition = 'all 0.6s';
