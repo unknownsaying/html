@@ -1,0 +1,1353 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DarkGameStudio | 自进化内核 · Steam发布框架</title>
+    <style>
+        :root {
+            --bg-primary: #0a0a0f;
+            --bg-secondary: #111118;
+            --bg-tertiary: #1a1a24;
+            --bg-card: #14141e;
+            --border: #252535;
+            --text-primary: #e0e0e0;
+            --text-secondary: #9090a0;
+            --text-muted: #606070;
+            --accent: #c4003f;
+            --accent-glow: #ff1a5c;
+            --accent-secondary: #7b2fff;
+            --accent-tertiary: #00d4aa;
+            --steam-blue: #1a9fff;
+            --wechat-green: #07c160;
+            --gold: #ffb800;
+            --danger: #e84040;
+            --success: #3cc480;
+            --font-mono: 'Courier New', 'Consolas', 'Monaco', monospace;
+            --font-sans: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            --radius: 8px;
+            --radius-sm: 4px;
+            --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.6);
+            --shadow-glow-accent: 0 0 24px rgba(196, 0, 63, 0.5);
+            --transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--font-sans);
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* 粒子背景 */
+        #particleCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            opacity: 0.4;
+        }
+
+        /* 主容器 */
+        .app-container {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        /* 头部导航 */
+        .header {
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border);
+            padding: 0 24px;
+            height: 56px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            box-shadow: 0 2px 16px rgba(0, 0, 0, 0.5);
+        }
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+        .logo-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent), #2a000a);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            font-weight: 900;
+            letter-spacing: -1px;
+            box-shadow: var(--shadow-glow-accent);
+            animation: logoPulse 3s infinite;
+        }
+        @keyframes logoPulse {
+            0%,
+            100% {
+                box-shadow: 0 0 16px rgba(196, 0, 63, 0.5);
+            }
+            50% {
+                box-shadow: 0 0 32px rgba(255, 26, 92, 0.8);
+            }
+        }
+        .logo-text {
+            font-weight: 700;
+            font-size: 18px;
+            letter-spacing: 0.5px;
+            background: linear-gradient(135deg, #fff, #ccc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--success);
+            animation: statusBlink 2s infinite;
+        }
+        @keyframes statusBlink {
+            0%,
+            100% {
+                opacity: 1;
+                box-shadow: 0 0 6px var(--success);
+            }
+            50% {
+                opacity: 0.4;
+                box-shadow: 0 0 2px var(--success);
+            }
+        }
+        .status-text {
+            font-size: 12px;
+            color: var(--text-secondary);
+            letter-spacing: 0.5px;
+        }
+        .btn {
+            padding: 8px 16px;
+            border-radius: var(--radius-sm);
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            transition: var(--transition);
+            font-family: var(--font-sans);
+            letter-spacing: 0.3px;
+            position: relative;
+            overflow: hidden;
+        }
+        .btn-accent {
+            background: var(--accent);
+            color: #fff;
+            box-shadow: 0 2px 12px rgba(196, 0, 63, 0.4);
+        }
+        .btn-accent:hover {
+            background: var(--accent-glow);
+            box-shadow: 0 4px 20px rgba(255, 26, 92, 0.6);
+            transform: translateY(-1px);
+        }
+        .btn-outline {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+        }
+        .btn-outline:hover {
+            border-color: var(--text-secondary);
+            background: rgba(255, 255, 255, 0.03);
+        }
+        .btn-sm {
+            padding: 5px 10px;
+            font-size: 11px;
+            border-radius: 3px;
+        }
+
+        /* 主体布局 */
+        .main-content {
+            display: flex;
+            flex: 1;
+            gap: 0;
+            padding: 0;
+            height: calc(100vh - 56px);
+        }
+
+        /* 左侧面板 - 内核监控 */
+        .panel-left {
+            width: 340px;
+            min-width: 340px;
+            background: var(--bg-secondary);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            padding: 16px;
+            gap: 14px;
+        }
+        .panel-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 14px;
+            transition: var(--transition);
+        }
+        .panel-card:hover {
+            border-color: #3a3a50;
+        }
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+        .card-title {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--text-secondary);
+            font-weight: 700;
+        }
+        .card-badge {
+            font-size: 10px;
+            padding: 3px 8px;
+            border-radius: 10px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+        .badge-active {
+            background: rgba(60, 196, 128, 0.15);
+            color: var(--success);
+            border: 1px solid rgba(60, 196, 128, 0.3);
+        }
+        .badge-evolving {
+            background: rgba(255, 184, 0, 0.15);
+            color: var(--gold);
+            border: 1px solid rgba(255, 184, 0, 0.3);
+            animation: badgePulse 1.5s infinite;
+        }
+        @keyframes badgePulse {
+            0%,
+            100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        .metric-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 5px 0;
+            font-size: 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+        }
+        .metric-label {
+            color: var(--text-muted);
+        }
+        .metric-value {
+            font-weight: 600;
+            font-family: var(--font-mono);
+            font-size: 11px;
+        }
+        .metric-value.accent {
+            color: var(--accent-glow);
+        }
+        .metric-value.gold {
+            color: var(--gold);
+        }
+        .metric-value.green {
+            color: var(--success);
+        }
+
+        /* 进度条 */
+        .progress-bar {
+            height: 6px;
+            background: var(--bg-tertiary);
+            border-radius: 3px;
+            overflow: hidden;
+            margin: 6px 0;
+        }
+        .progress-fill {
+            height: 100%;
+            border-radius: 3px;
+            transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            background: linear-gradient(90deg, var(--accent), var(--accent-glow));
+        }
+        .progress-fill.gold {
+            background: linear-gradient(90deg, #b8860b, var(--gold));
+        }
+        .progress-fill.purple {
+            background: linear-gradient(90deg, #5b2fff, var(--accent-secondary));
+        }
+
+        /* DNA螺旋动画 */
+        .dna-visual {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 3px;
+            height: 50px;
+            margin: 8px 0;
+            font-family: var(--font-mono);
+            font-size: 9px;
+            letter-spacing: 1px;
+            color: var(--accent-glow);
+            overflow: hidden;
+        }
+        .dna-strand {
+            animation: dnaScroll 2s linear infinite;
+            white-space: nowrap;
+        }
+        @keyframes dnaScroll {
+            0% {
+                transform: translateY(20px);
+                opacity: 0;
+            }
+            30% {
+                opacity: 1;
+            }
+            70% {
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-20px);
+                opacity: 0;
+            }
+        }
+
+        /* 中央区域 */
+        .panel-center {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            padding: 20px;
+            gap: 18px;
+            background: var(--bg-primary);
+        }
+        .section-title {
+            font-size: 14px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .section-title .icon {
+            font-size: 16px;
+        }
+        .game-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 14px;
+        }
+        .game-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            overflow: hidden;
+            transition: var(--transition);
+            cursor: pointer;
+        }
+        .game-card:hover {
+            border-color: #4a4a66;
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+        .game-card-img {
+            height: 120px;
+            background: var(--bg-tertiary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            position: relative;
+            overflow: hidden;
+        }
+        .game-card-img .overlay-tag {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: var(--accent);
+            color: #fff;
+            font-size: 10px;
+            padding: 3px 8px;
+            border-radius: 3px;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+        .game-card-body {
+            padding: 12px;
+        }
+        .game-card-title {
+            font-weight: 700;
+            font-size: 14px;
+            margin-bottom: 2px;
+        }
+        .game-card-subtitle {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+        }
+        .game-card-stats {
+            display: flex;
+            gap: 12px;
+            font-size: 10px;
+            color: var(--text-secondary);
+        }
+        .stat-positive {
+            color: var(--success);
+        }
+
+        /* Steam状态条 */
+        .steam-status-bar {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 14px 18px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        .steam-stat {
+            display: flex;
+            flex-direction: column;
+        }
+        .steam-stat-value {
+            font-size: 22px;
+            font-weight: 800;
+            font-family: var(--font-mono);
+            color: var(--steam-blue);
+        }
+        .steam-stat-label {
+            font-size: 10px;
+            color: var(--text-muted);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        /* 右侧面板 - WeChat */
+        .panel-right {
+            width: 360px;
+            min-width: 360px;
+            background: var(--bg-secondary);
+            border-left: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .wechat-header {
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: #0d0d0d;
+        }
+        .wechat-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 6px;
+            background: linear-gradient(135deg, #1a1a2e, #252540);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            border: 2px solid var(--wechat-green);
+            box-shadow: 0 0 12px rgba(7, 193, 96, 0.3);
+        }
+        .wechat-user-info {
+            flex: 1;
+        }
+        .wechat-username {
+            font-weight: 700;
+            font-size: 14px;
+        }
+        .wechat-status {
+            font-size: 11px;
+            color: var(--wechat-green);
+        }
+        .wechat-chat-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            background: #0a0a0f;
+        }
+        .chat-msg {
+            max-width: 80%;
+            padding: 10px 14px;
+            border-radius: 16px;
+            font-size: 13px;
+            line-height: 1.5;
+            word-break: break-word;
+            animation: msgSlideIn 0.3s ease;
+        }
+        @keyframes msgSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(8px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .chat-msg.received {
+            background: #1c1c28;
+            align-self: flex-start;
+            border-bottom-left-radius: 4px;
+            color: #ddd;
+        }
+        .chat-msg.sent {
+            background: #0b3d1f;
+            align-self: flex-end;
+            border-bottom-right-radius: 4px;
+            color: #e0ffe0;
+            border: 1px solid rgba(7, 193, 96, 0.3);
+        }
+        .chat-msg.system-msg {
+            background: rgba(123, 47, 255, 0.15);
+            align-self: center;
+            border-radius: 8px;
+            font-size: 11px;
+            color: var(--accent-secondary);
+            text-align: center;
+            max-width: 90%;
+            border: 1px solid rgba(123, 47, 255, 0.2);
+        }
+        .chat-time {
+            font-size: 10px;
+            color: var(--text-muted);
+            text-align: center;
+            margin: 6px 0;
+        }
+        .chat-input-area {
+            padding: 12px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            gap: 8px;
+            background: #0d0d0d;
+        }
+        .chat-input {
+            flex: 1;
+            background: #1a1a24;
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 10px 16px;
+            color: #fff;
+            font-size: 13px;
+            font-family: var(--font-sans);
+            outline: none;
+            transition: var(--transition);
+        }
+        .chat-input:focus {
+            border-color: var(--wechat-green);
+            box-shadow: 0 0 0 3px rgba(7, 193, 96, 0.1);
+        }
+        .chat-send-btn {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: var(--wechat-green);
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            transition: var(--transition);
+            flex-shrink: 0;
+        }
+        .chat-send-btn:hover {
+            background: #06b856;
+            box-shadow: 0 0 16px rgba(7, 193, 96, 0.5);
+        }
+
+        /* 弹窗 */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.75);
+            z-index: 200;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.2s ease;
+        }
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+        .modal {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 24px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: var(--shadow-lg);
+        }
+        .modal h3 {
+            margin-bottom: 12px;
+            font-size: 18px;
+        }
+        .modal p {
+            color: var(--text-secondary);
+            font-size: 13px;
+            margin-bottom: 16px;
+            line-height: 1.6;
+        }
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+
+        /* 滚动条 */
+        ::-webkit-scrollbar {
+            width: 5px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #2a2a3a;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #3a3a4a;
+        }
+
+        /* 响应式 */
+        @media (max-width: 1200px) {
+            .panel-right {
+                width: 300px;
+                min-width: 300px;
+            }
+            .panel-left {
+                width: 280px;
+                min-width: 280px;
+            }
+        }
+        @media (max-width: 900px) {
+            .main-content {
+                flex-direction: column;
+                height: auto;
+            }
+            .panel-left,
+            .panel-right {
+                width: 100%;
+                min-width: 100%;
+                max-height: 400px;
+            }
+            .panel-center {
+                order: -1;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 粒子背景画布 -->
+    <canvas id="particleCanvas"></canvas>
+
+    <!-- 应用容器 -->
+    <div class="app-container">
+        <!-- 头部 -->
+        <header class="header">
+            <div class="header-left">
+                <div class="logo-icon">⚙️</div>
+                <span class="logo-text">DarkGameStudio</span>
+                <span style="font-size:10px;color:var(--text-muted);margin-left:4px;">v3.7.1-evo</span>
+            </div>
+            <div class="header-right">
+                <div class="status-dot"></div>
+                <span class="status-text">内核运行中 · 世代 <strong id="genCount">247</strong></span>
+                <button class="btn btn-accent btn-sm" onclick="triggerEvolution()" title="手动触发进化">⚡ 强制进化</button>
+                <button class="btn btn-outline btn-sm" onclick="openSteamModal()">🔗 Steam 发布</button>
+            </div>
+        </header>
+
+        <!-- 主体三栏布局 -->
+        <div class="main-content">
+            <!-- 左栏：自进化内核 -->
+            <aside class="panel-left" id="panelLeft">
+                <div class="panel-card">
+                    <div class="card-header">
+                        <span class="card-title">🧬 自进化内核</span>
+                        <span class="card-badge badge-evolving" id="evoBadge">EVOLVING</span>
+                    </div>
+                    <div class="dna-visual">
+                        <span class="dna-strand" id="dnaStrand">ATG-CGA-TTA-GGC-ATC-GTA-CCC-ATG-CGA-TTA</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">当前世代</span>
+                        <span class="metric-value accent" id="metricGen">247</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">适应度分数</span>
+                        <span class="metric-value gold" id="metricFitness">94.7</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill gold" id="fitnessBar" style="width:94.7%"></div>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">突变率</span>
+                        <span class="metric-value" id="metricMutation">0.023</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">种群大小</span>
+                        <span class="metric-value green" id="metricPop">1,024</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">最佳基因长度</span>
+                        <span class="metric-value" id="metricGeneLen">512 bp</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill purple" id="evoBar" style="width:68%"></div>
+                    </div>
+                    <div style="font-size:10px;color:var(--text-muted);margin-top:4px;text-align:right;">进化进度 68%</div>
+                </div>
+
+                <div class="panel-card">
+                    <div class="card-header">
+                        <span class="card-title">📊 实时指标</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">CPU 推理负载</span>
+                        <span class="metric-value" id="metricCPU">37.2%</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="cpuBar" style="width:37.2%"></div>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">内存占用</span>
+                        <span class="metric-value" id="metricRAM">1.8 GB</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">GPU 利用率</span>
+                        <span class="metric-value accent" id="metricGPU">62.5%</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">进化周期</span>
+                        <span class="metric-value" id="metricCycle">3.2s</span>
+                    </div>
+                </div>
+
+                <div class="panel-card">
+                    <div class="card-header">
+                        <span class="card-title">🔗 Steam 绑定</span>
+                        <span class="card-badge badge-active">CONNECTED</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">Steam App ID</span>
+                        <span class="metric-value" style="color:var(--steam-blue);">2849170</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">愿望单数</span>
+                        <span class="metric-value gold" id="metricWishlist">48,392</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">好评率</span>
+                        <span class="metric-value green">96%</span>
+                    </div>
+                    <button class="btn btn-accent btn-sm" style="width:100%;margin-top:8px;" onclick="openSteamModal()">
+                        🚀 推送到 Steamworks
+                    </button>
+                </div>
+            </aside>
+
+            <!-- 中栏：游戏项目 -->
+            <main class="panel-center" id="panelCenter">
+                <div class="section-title">
+                    <span class="icon">🎮</span> DarkGameStudio 项目矩阵
+                </div>
+                <div class="game-grid" id="gameGrid">
+                    <!-- 动态填充 -->
+                </div>
+
+                <div class="steam-status-bar" id="steamStatusBar">
+                    <div class="steam-stat">
+                        <span class="steam-stat-value" id="steamCCU">12,847</span>
+                        <span class="steam-stat-label">当前在线 (CCU)</span>
+                    </div>
+                    <div class="steam-stat">
+                        <span class="steam-stat-value" style="color:var(--gold);" id="steamReviews">8,921</span>
+                        <span class="steam-stat-label">总评测数</span>
+                    </div>
+                    <div class="steam-stat">
+                        <span class="steam-stat-value" style="color:var(--success);" id="steamRevenue">$2.47M</span>
+                        <span class="steam-stat-label">预估收入</span>
+                    </div>
+                    <div class="steam-stat">
+                        <span class="steam-stat-value" style="color:var(--accent-secondary);" id="steamFollowers">156K</span>
+                        <span class="steam-stat-label">关注者</span>
+                    </div>
+                </div>
+            </main>
+
+            <!-- 右栏：WeChat 连接 thepipboy -->
+            <aside class="panel-right" id="panelRight">
+                <div class="wechat-header">
+                    <div class="wechat-avatar">👤</div>
+                    <div class="wechat-user-info">
+                        <div class="wechat-username">thepipboy</div>
+                        <div class="wechat-status">🟢 在线 · DarkGameStudio Dev</div>
+                    </div>
+                    <span style="font-size:10px;color:var(--text-muted);">WeChat</span>
+                </div>
+                <div class="wechat-chat-area" id="wechatChatArea">
+                    <div class="chat-time">2026-04-29 14:30</div>
+                    <div class="chat-msg system-msg">🔗 DarkGameStudio 内核已连接至 thepipboy 的 WeChat</div>
+                    <div class="chat-msg received">
+                        <strong>thepipboy:</strong> 内核自检完成，Steam管道就绪。新构建的进化框架已部署至 DarkGameStudio。
+                    </div>
+                    <div class="chat-msg sent">
+                        <strong>系统:</strong> 收到。当前世代 247，适应度 94.7%。已自动同步至 Steamworks。
+                    </div>
+                </div>
+                <div class="chat-input-area">
+                    <input type="text" class="chat-input" id="chatInput" placeholder="发送消息给 thepipboy..."
+                    onkeydown="if(event.key==='Enter')sendWeChatMsg()">
+                    <button class="chat-send-btn" onclick="sendWeChatMsg()">📤</button>
+                </div>
+            </aside>
+        </div>
+    </div>
+
+    <!-- Steam 发布弹窗 -->
+    <div class="modal-overlay" id="steamModal" style="display:none;">
+        <div class="modal">
+            <h3>🚀 Steam 发布 — DarkGameStudio</h3>
+            <p>自进化内核已生成 <strong>3 个候选构建版本</strong>。选择要推送到 Steamworks 的版本：</p>
+            <div id="modalBuildList" style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px;"></div>
+            <div class="modal-actions">
+                <button class="btn btn-outline btn-sm" onclick="closeSteamModal()">取消</button>
+                <button class="btn btn-accent btn-sm" id="btnPushSteam" onclick="pushToSteam()">📦 推送到 Steam</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==================== 自进化内核引擎 ====================
+        class SelfEvolvableKernel {
+            constructor() {
+                this.generation = 247;
+                this.populationSize = 1024;
+                this.mutationRate = 0.023;
+                this.fitnessScore = 94.7;
+                this.bestGeneLength = 512;
+                this.evolutionProgress = 68;
+                this.cpuLoad = 37.2;
+                this.ramUsage = 1.8;
+                this.gpuUtil = 62.5;
+                this.cycleTime = 3.2;
+                this.isEvolving = true;
+                this.evolutionSpeed = 1;
+                this.geneSequence = this.generateGeneSequence();
+                this.listeners = [];
+            }
+
+            generateGeneSequence() {
+                const bases = ['ATG', 'CGA', 'TTA', 'GGC', 'ATC', 'GTA', 'CCC', 'TGC', 'AAG', 'CTC',
+                    'GAA', 'TTC', 'CAG', 'AGT', 'ACC', 'TGG', 'CTA', 'GAT', 'CGT', 'TGA'
+                ];
+                let seq = [];
+                for (let i = 0; i < 16; i++) {
+                    seq.push(bases[Math.floor(Math.random() * bases.length)]);
+                }
+                return seq.join('-');
+            }
+
+            mutate() {
+                this.generation++;
+                const fitnessDelta = (Math.random() - 0.35) * 3;
+                this.fitnessScore = Math.min(99.9, Math.max(75, this.fitnessScore + fitnessDelta));
+                this.mutationRate = 0.01 + Math.random() * 0.04;
+                this.mutationRate = Math.round(this.mutationRate * 1000) / 1000;
+                this.bestGeneLength = Math.floor(480 + Math.random() * 80);
+                this.evolutionProgress = Math.min(100, this.evolutionProgress + (Math.random() - 0.3) * 8);
+                this.evolutionProgress = Math.round(this.evolutionProgress * 10) / 10;
+                this.cpuLoad = 25 + Math.random() * 50;
+                this.cpuLoad = Math.round(this.cpuLoad * 10) / 10;
+                this.ramUsage = 1.2 + Math.random() * 2.5;
+                this.ramUsage = Math.round(this.ramUsage * 10) / 10;
+                this.gpuUtil = 40 + Math.random() * 50;
+                this.gpuUtil = Math.round(this.gpuUtil * 10) / 10;
+                this.cycleTime = 2 + Math.random() * 5;
+                this.cycleTime = Math.round(this.cycleTime * 10) / 10;
+                this.geneSequence = this.generateGeneSequence();
+                this.populationSize = Math.floor(800 + Math.random() * 600);
+                this.notifyListeners();
+            }
+
+            subscribe(fn) { this.listeners.push(fn); }
+
+            notifyListeners() {
+                const state = this.getState();
+                this.listeners.forEach(fn => fn(state));
+            }
+
+            getState() {
+                return {
+                    generation: this.generation,
+                    fitnessScore: this.fitnessScore,
+                    mutationRate: this.mutationRate,
+                    populationSize: this.populationSize,
+                    bestGeneLength: this.bestGeneLength,
+                    evolutionProgress: this.evolutionProgress,
+                    cpuLoad: this.cpuLoad,
+                    ramUsage: this.ramUsage,
+                    gpuUtil: this.gpuUtil,
+                    cycleTime: this.cycleTime,
+                    geneSequence: this.geneSequence,
+                    isEvolving: this.isEvolving,
+                };
+            }
+
+            forceEvolve() {
+                this.mutationRate = 0.05 + Math.random() * 0.06;
+                for (let i = 0; i < 3; i++) this.mutate();
+                this.mutationRate = 0.02 + Math.random() * 0.03;
+                this.mutationRate = Math.round(this.mutationRate * 1000) / 1000;
+                this.notifyListeners();
+                return this.getState();
+            }
+
+            startAutoEvolution(intervalMs = 4000) {
+                this._interval = setInterval(() => this.mutate(), intervalMs);
+            }
+
+            stopAutoEvolution() {
+                if (this._interval) clearInterval(this._interval);
+            }
+        }
+
+        // ==================== 游戏数据 ====================
+        const gameProjects = [{
+            id: 'void-protocol',
+            name: 'Void Protocol',
+            icon: '🌑',
+            subtitle: '暗黑科幻 · 生存恐怖',
+            wishlist: 18320,
+            rating: 95,
+            ccu: 4201,
+            color: '#1a1a30',
+            tag: '热销',
+        }, {
+            id: 'necro-forge',
+            name: 'Necro Forge',
+            icon: '💀',
+            subtitle: '黑暗奇幻 · 动作RPG',
+            wishlist: 12450,
+            rating: 92,
+            ccu: 3150,
+            color: '#201510',
+            tag: '新品',
+        }, {
+            id: 'shadow-meridian',
+            name: 'Shadow Meridian',
+            icon: '🕯️',
+            subtitle: '哥特解谜 · 心理恐怖',
+            wishlist: 8900,
+            rating: 97,
+            ccu: 2780,
+            color: '#101820',
+            tag: '好评',
+        }, {
+            id: 'abyss-engine',
+            name: 'Abyss Engine',
+            icon: '🌀',
+            subtitle: '克苏鲁 · 策略模拟',
+            wishlist: 6720,
+            rating: 89,
+            ccu: 1900,
+            color: '#0d1520',
+            tag: '抢先',
+        }, {
+            id: 'crimson-cradle',
+            name: 'Crimson Cradle',
+            icon: '🩸',
+            subtitle: '吸血鬼 · 沉浸模拟',
+            wishlist: 15100,
+            rating: 94,
+            ccu: 3600,
+            color: '#1a0a0a',
+            tag: '热销',
+        }, {
+            id: 'static-void',
+            name: 'Static Void',
+            icon: '📺',
+            subtitle: '模拟恐怖 · 元叙事',
+            wishlist: 5100,
+            rating: 98,
+            ccu: 1100,
+            color: '#0f0f18',
+            tag: '好评',
+        }, ];
+
+        // ==================== 全局状态 ====================
+        const kernel = new SelfEvolvableKernel();
+        let totalWishlist = 48392;
+        let totalCCU = 12847;
+        let totalReviews = 8921;
+        let totalRevenue = 2.47;
+        let totalFollowers = 156;
+
+        // ==================== UI 更新函数 ====================
+        function updateKernelUI(state) {
+            document.getElementById('genCount').textContent = state.generation;
+            document.getElementById('metricGen').textContent = state.generation;
+            document.getElementById('metricFitness').textContent = state.fitnessScore.toFixed(1);
+            document.getElementById('fitnessBar').style.width = state.fitnessScore + '%';
+            document.getElementById('metricMutation').textContent = state.mutationRate.toFixed(3);
+            document.getElementById('metricPop').textContent = state.populationSize.toLocaleString();
+            document.getElementById('metricGeneLen').textContent = state.bestGeneLength + ' bp';
+            document.getElementById('evoBar').style.width = state.evolutionProgress + '%';
+            document.getElementById('metricCPU').textContent = state.cpuLoad.toFixed(1) + '%';
+            document.getElementById('cpuBar').style.width = state.cpuLoad + '%';
+            document.getElementById('metricRAM').textContent = state.ramUsage.toFixed(1) + ' GB';
+            document.getElementById('metricGPU').textContent = state.gpuUtil.toFixed(1) + '%';
+            document.getElementById('metricCycle').textContent = state.cycleTime.toFixed(1) + 's';
+            document.getElementById('dnaStrand').textContent = state.geneSequence;
+
+            const badge = document.getElementById('evoBadge');
+            if (state.isEvolving) {
+                badge.textContent = 'EVOLVING';
+                badge.className = 'card-badge badge-evolving';
+            } else {
+                badge.textContent = 'IDLE';
+                badge.className = 'card-badge badge-active';
+            }
+
+            // 更新全局 Steam 数据
+            totalWishlist = Math.floor(totalWishlist + (Math.random() - 0.3) * 120);
+            totalCCU = Math.floor(totalCCU + (Math.random() - 0.4) * 200);
+            totalReviews = Math.floor(totalReviews + (Math.random() - 0.2) * 40);
+            totalRevenue = Math.round((totalRevenue + (Math.random() - 0.3) * 0.05) * 100) / 100;
+            totalFollowers = Math.floor(totalFollowers + (Math.random() - 0.3) * 2);
+
+            document.getElementById('metricWishlist').textContent = totalWishlist.toLocaleString();
+            document.getElementById('steamCCU').textContent = totalCCU.toLocaleString();
+            document.getElementById('steamReviews').textContent = totalReviews.toLocaleString();
+            document.getElementById('steamRevenue').textContent = '$' + totalRevenue.toFixed(2) + 'M';
+            document.getElementById('steamFollowers').textContent = Math.floor(totalFollowers).toLocaleString() + 'K';
+        }
+
+        function renderGameGrid() {
+            const grid = document.getElementById('gameGrid');
+            grid.innerHTML = gameProjects.map(game => `
+            <div class="game-card" onclick="selectGame('${game.id}')" title="点击查看详情">
+              <div class="game-card-img" style="background:${game.color};">
+                <span>${game.icon}</span>
+                <span class="overlay-tag">${game.tag}</span>
+              </div>
+              <div class="game-card-body">
+                <div class="game-card-title">${game.name}</div>
+                <div class="game-card-subtitle">${game.subtitle}</div>
+                <div class="game-card-stats">
+                  <span>❤️ ${game.wishlist.toLocaleString()}</span>
+                  <span class="stat-positive">👍 ${game.rating}%</span>
+                  <span>👥 ${game.ccu.toLocaleString()}</span>
+                </div>
+              </div>
+            </div>
+          `).join('');
+        }
+
+        function selectGame(gameId) {
+            const game = gameProjects.find(g => g.id === gameId);
+            if (!game) return;
+            addWeChatMessage('system',
+                `📋 已选中项目: <strong>${game.name}</strong> — 愿望单 ${game.wishlist.toLocaleString()} | 好评率 ${game.rating}% | CCU ${game.ccu.toLocaleString()}`,
+                true);
+            // 触发一次内核进化
+            kernel.forceEvolve();
+        }
+
+        // ==================== WeChat 消息系统 ====================
+        function addWeChatMessage(type, text, isSystem = false) {
+            const chatArea = document.getElementById('wechatChatArea');
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
+
+            if (chatArea.children.length > 20) {
+                chatArea.removeChild(chatArea.firstChild);
+            }
+
+            const timeDiv = document.createElement('div');
+            timeDiv.className = 'chat-time';
+            timeDiv.textContent = timeStr;
+            chatArea.appendChild(timeDiv);
+
+            const msgDiv = document.createElement('div');
+            if (isSystem) {
+                msgDiv.className = 'chat-msg system-msg';
+            } else if (type === 'sent') {
+                msgDiv.className = 'chat-msg sent';
+            } else {
+                msgDiv.className = 'chat-msg received';
+            }
+            msgDiv.innerHTML = text;
+            chatArea.appendChild(msgDiv);
+            chatArea.scrollTop = chatArea.scrollHeight;
+        }
+
+        function sendWeChatMsg() {
+            const input = document.getElementById('chatInput');
+            const text = input.value.trim();
+            if (!text) return;
+            addWeChatMessage('sent', '<strong>你:</strong> ' + escapeHTML(text));
+            input.value = '';
+
+            // 模拟 thepipboy 回复
+            setTimeout(() => {
+                const replies = [
+                    '收到。内核状态已同步。当前进化路径稳定。',
+                    'DarkGameStudio 的 Steam 管道一切正常。需要我调整突变率吗？',
+                    '已记录。我会将这次对话标记为开发日志条目。',
+                    '明白。Void Protocol 的构建版本已准备好推送。',
+                    '检测到适应度上升趋势，建议保持当前进化速度。',
+                    'Steamworks 后端响应正常，CCU 数据实时更新中。',
+                ];
+                const reply = replies[Math.floor(Math.random() * replies.length)];
+                addWeChatMessage('received', '<strong>thepipboy:</strong> ' + reply);
+                kernel.mutate();
+            }, 800 + Math.random() * 1500);
+        }
+
+        function escapeHTML(str) {
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
+
+        // ==================== Steam 弹窗 ====================
+        function openSteamModal() {
+            const modal = document.getElementById('steamModal');
+            modal.style.display = 'flex';
+            const buildList = document.getElementById('modalBuildList');
+            const builds = [
+                { id: 'build-alpha', name: 'Alpha 构建 · v3.7.1-evo', size: '2.4 GB', status: '稳定',
+                    desc: '基于世代247基因编码' },
+                { id: 'build-beta', name: 'Beta 构建 · v3.7.2-nightly', size: '2.6 GB', status: '实验性',
+                    desc: '增强突变率0.031，高适应度' },
+                { id: 'build-rc', name: 'RC 构建 · v3.8.0-rc1', size: '2.5 GB', status: '候选发布', desc: '全平台优化，Steam Deck 适配' },
+            ];
+            buildList.innerHTML = builds.map((b, i) => `
+            <label style="display:flex;align-items:center;gap:10px;padding:10px;background:var(--bg-card);border-radius:6px;cursor:pointer;border:1px solid var(--border);">
+              <input type="radio" name="buildSelect" value="${b.id}" ${i===0?'checked':''}>
+              <div style="flex:1;">
+                <strong style="font-size:13px;">${b.name}</strong>
+                <div style="font-size:10px;color:var(--text-muted);">${b.desc} · ${b.size} · ${b.status}</div>
+              </div>
+            </label>
+          `).join('');
+        }
+
+        function closeSteamModal() {
+            document.getElementById('steamModal').style.display = 'none';
+        }
+
+        function pushToSteam() {
+            const selected = document.querySelector('input[name="buildSelect"]:checked');
+            const buildName = selected ? selected.value : 'build-alpha';
+            closeSteamModal();
+            addWeChatMessage('system',
+                `📦 <strong>Steam 推送已启动!</strong> 构建版本: ${buildName} → Steamworks 管道传输中...`, true);
+            addWeChatMessage('received',
+                '<strong>thepipboy:</strong> 收到推送请求。DarkGameStudio 构建正在上传至 Steam。预计 3 分钟内完成。');
+            // 触发进化
+            kernel.forceEvolve();
+            // 更新 Steam 数据
+            totalCCU += Math.floor(Math.random() * 500);
+            totalWishlist += Math.floor(Math.random() * 300);
+            updateKernelUI(kernel.getState());
+            document.getElementById('steamCCU').textContent = totalCCU.toLocaleString();
+            document.getElementById('metricWishlist').textContent = totalWishlist.toLocaleString();
+            setTimeout(() => {
+                addWeChatMessage('system', '✅ Steam 推送完成！构建已上线，全球 CDN 同步中。', true);
+            }, 3000);
+        }
+
+        function triggerEvolution() {
+            const state = kernel.forceEvolve();
+            updateKernelUI(state);
+            addWeChatMessage('system',
+                `⚡ <strong>强制进化触发!</strong> 新世代: ${state.generation} | 适应度: ${state.fitnessScore.toFixed(1)}% | 突变率: ${state.mutationRate.toFixed(3)}`,
+                true);
+        }
+
+        // ==================== 粒子背景 ====================
+        function initParticles() {
+            const canvas = document.getElementById('particleCanvas');
+            const ctx = canvas.getContext('2d');
+            let particles = [];
+            const maxParticles = 80;
+
+            function resize() {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            }
+            resize();
+            window.addEventListener('resize', resize);
+
+            class Particle {
+                constructor() {
+                    this.reset();
+                }
+                reset() {
+                    this.x = Math.random() * canvas.width;
+                    this.y = Math.random() * canvas.height;
+                    this.size = Math.random() * 2 + 0.5;
+                    this.speedX = (Math.random() - 0.5) * 0.6;
+                    this.speedY = (Math.random() - 0.5) * 0.6;
+                    this.opacity = Math.random() * 0.5 + 0.1;
+                    this.fadeSpeed = Math.random() * 0.005 + 0.002;
+                    this.fadingIn = Math.random() > 0.5;
+                }
+                update() {
+                    this.x += this.speedX;
+                    this.y += this.speedY;
+                    if (this.fadingIn) {
+                        this.opacity += this.fadeSpeed;
+                        if (this.opacity >= 0.5) this.fadingIn = false;
+                    } else {
+                        this.opacity -= this.fadeSpeed;
+                        if (this.opacity <= 0.1) this.fadingIn = true;
+                    }
+                    if (this.x < -10 || this.x > canvas.width + 10 || this.y < -10 || this.y > canvas.height + 10) {
+                        this.reset();
+                    }
+                }
+                draw(ctx) {
+                    ctx.fillStyle = `rgba(196,0,63,${this.opacity})`;
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+
+            for (let i = 0; i < maxParticles; i++) {
+                particles.push(new Particle());
+            }
+
+            function animate() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                particles.forEach(p => {
+                    p.update();
+                    p.draw(ctx);
+                });
+                // 绘制连接线
+                for (let i = 0; i < particles.length; i++) {
+                    for (let j = i + 1; j < particles.length; j++) {
+                        const dx = particles[i].x - particles[j].x;
+                        const dy = particles[i].y - particles[j].y;
+                        const dist = Math.sqrt(dx * dx + dy * dy);
+                        if (dist < 120) {
+                            ctx.strokeStyle =
+                                `rgba(196,0,63,${0.08 * (1 - dist/120) * particles[i].opacity * particles[j].opacity})`;
+                            ctx.lineWidth = 0.5;
+                            ctx.beginPath();
+                            ctx.moveTo(particles[i].x, particles[i].y);
+                            ctx.lineTo(particles[j].x, particles[j].y);
+                            ctx.stroke();
+                        }
+                    }
+                }
+                requestAnimationFrame(animate);
+            }
+            animate();
+        }
+
+        // ==================== 初始化 ====================
+        function init() {
+            renderGameGrid();
+            updateKernelUI(kernel.getState());
+
+            // 订阅内核状态变化
+            kernel.subscribe((state) => updateKernelUI(state));
+
+            // 启动自动进化
+            kernel.startAutoEvolution(3500);
+
+            // 初始化粒子背景
+            initParticles();
+
+            // 初始 WeChat 消息
+            setTimeout(() => {
+                addWeChatMessage('received',
+                    '<strong>thepipboy:</strong> DarkGameStudio 框架已上线。自进化内核 v3.7.1 运行中。Steam 管道连接正常。');
+            }, 1500);
+
+            console.log('%c🧬 DarkGameStudio 自进化内核已启动 %c| %c世代 ' + kernel.generation +
+                ' %c| %cWeChat: thepipboy %c| %cSteam AppID: 2849170',
+                'color:#ff1a5c;font-weight:bold;', '',
+                'color:#ffb800;', '',
+                'color:#07c160;', '',
+                'color:#1a9fff;');
+            console.log('%c🔮 框架就绪 — 可通过左侧面板监控进化，右侧 WeChat 连接 thepipboy',
+                'color:#7b2fff;font-style:italic;');
+        }
+
+        // 点击弹窗外部关闭
+        document.addEventListener('click', function(e) {
+            const modal = document.getElementById('steamModal');
+            if (e.target === modal) {
+                closeSteamModal();
+            }
+        });
+
+        // 启动应用
+        document.addEventListener('DOMContentLoaded', init);
+
+        // 暴露全局函数
+        window.triggerEvolution = triggerEvolution;
+        window.openSteamModal = openSteamModal;
+        window.closeSteamModal = closeSteamModal;
+        window.pushToSteam = pushToSteam;
+        window.sendWeChatMsg = sendWeChatMsg;
+        window.selectGame = selectGame;
+    </script>
+</body>
+</html>
