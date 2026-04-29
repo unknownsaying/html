@@ -97,7 +97,7 @@
         const lightBtn = document.createElement('a');
         lightBtn.href = '#';
         lightBtn.textContent = '☀️ Try Light Mode';
-        lightBtn.style.cssText = 'color: #ffcc00; margin-left: 12px; text-decoration: none; font-weight: bold;';
+        lightBtn.style.cssText = 'color: #ffffff; margin-left: 12px; text-decoration: none; font-weight: bold;';
         lightBtn.addEventListener('click', (e) => {
             e.preventDefault();
             document.documentElement.style.transition = 'all 0.5s';
