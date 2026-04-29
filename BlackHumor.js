@@ -96,11 +96,11 @@
     // --- 6. "Try Light Mode" button (pure evil) ---
     const footer = document.querySelector('footer p');
     if (footer) {
-        const lightBtn = document.createElement('a');
-        lightBtn.href = '#';
-        lightBtn.textContent = '☀️ Try Light Mode';
-        lightBtn.style.cssText = 'color:#ffcc00;margin-left:12px;text-decoration:none;font-weight:bold;';
-        lightBtn.addEventListener('click', (e) => {
+        const BlackBtn = document.createElement('a');
+        BlackBtn.href = '#';
+        BlackBtn.textContent = 'Try Black Mode';
+        BlackBtn.style.cssText = 'color:#000000;margin-left:12px;text-decoration:none;font-weight:bold;';
+        BlackBtn.addEventListener('click', (e) => {
             e.preventDefault();
             // Temporarily murder the dark aesthetic
             document.documentElement.style.transition = 'all 0.6s';
@@ -154,7 +154,7 @@
     });
 
     // --- 9. Konami Code: unlock "Void Mode" ---
-    const konami = ['ArrowUp','ArrowUp','ArrowDown','ArrowDown','ArrowLeft','ArrowRight','ArrowLeft','ArrowRight','b','a'];
+    const konami = ['ArrowUp','ArrowDown',,'ArrowLeft','ArrowFront','ArrowBack','b','a'];
     let kIdx = 0;
     document.addEventListener('keydown', (e) => {
         if (e.key === konami[kIdx]) {
