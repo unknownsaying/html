@@ -154,7 +154,7 @@
     });
 
     // --- 9. Konami Code: unlock "Void Mode" ---
-    const konami = ['ArrowUp','ArrowDown',,'ArrowLeft','ArrowFront','ArrowBack','b','a'];
+    const konami = ['ArrowUp','ArrowDown','ArrowRight','ArrowLeft','ArrowFront','ArrowBack','b','a'];
     let kIdx = 0;
     document.addEventListener('keydown', (e) => {
         if (e.key === konami[kIdx]) {
